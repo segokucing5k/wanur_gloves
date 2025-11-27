@@ -28,24 +28,15 @@ class HomeScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Abu-abu putih bersih
+      backgroundColor: const Color(0xFF0B101F), // Deep Navy sesuai gambar
       
       // --- APP BAR ---
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-          },
-          tooltip: 'Back',
-        ),
         title: const Text(
-          "HandGrip Rehab",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          "MediGrip",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           // INDIKATOR & TOMBOL CONNECT
@@ -54,7 +45,7 @@ class HomeScreen extends StatelessWidget {
             child: IconButton(
               icon: Icon(
                 glove.isConnected ? Icons.bluetooth_connected : Icons.bluetooth_searching,
-                color: glove.isConnected ? Colors.green : Colors.grey,
+                color: glove.isConnected ? Colors.greenAccent : Colors.cyanAccent,
               ),
               onPressed: () {
                 if (glove.isConnected) {
@@ -77,11 +68,11 @@ class HomeScreen extends StatelessWidget {
             // --- HEADER TEXT DINAMIS ---
             Text(
               "Halo, $greeting!", // <--- PAKAI VARIABEL DISINI
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1F2A44)),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
             ),
             Text(
               "Siap latihan hari ini?",
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
             ),
             
             const SizedBox(height: 24),
@@ -89,9 +80,9 @@ class HomeScreen extends StatelessWidget {
             // --- KARTU 1: UKUR GENGGAMAN (POTENSIO) ---
             ActionCard(
               title: "Ukur Genggaman",
-              subtitle: "Ukur kekuatan genggam (Slider)",
+              subtitle: "Ukur kekuatan genggaman tangan",
               icon: Icons.back_hand,
-              themeColor: const Color(0xFF2F80ED), // Biru
+              themeColor: const Color(0xFF00BFA5), // Hijau tosca aksen
               buttonText: "Mulai Ukur",
               onPressed: () {
                 Navigator.push(
@@ -108,7 +99,7 @@ class HomeScreen extends StatelessWidget {
               title: "Kalibrasi Jari",
               subtitle: "Cek respons sensor sentuh (Touch)",
               icon: Icons.touch_app,
-              themeColor: const Color(0xFF27AE60), // Hijau
+              themeColor: const Color(0xFF4A5240), // Olive gelap
               buttonText: "Mulai Kalibrasi",
               onPressed: () {
                 Navigator.push(
@@ -124,20 +115,20 @@ class HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFF121A2D),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300)
+                border: Border.all(color: Colors.cyanAccent.withOpacity(0.3))
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.orange),
+                  const Icon(Icons.info_outline, color: Colors.cyanAccent),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       glove.isConnected 
                         ? "Status: Perangkat Terhubung. Siap digunakan."
                         : "Status: Belum Terhubung. Tekan ikon Bluetooth di atas.",
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                   )
                 ],
@@ -168,7 +159,7 @@ class ActionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white70,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
       ),
