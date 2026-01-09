@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Asklepios Rehab',
+      title: 'Wanur Glove',
       
       // Hilangkan banner "DEBUG" di pojok kanan atas
       debugShowCheckedModeBanner: false,

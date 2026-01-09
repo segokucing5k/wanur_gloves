@@ -15,7 +15,6 @@ class GloveData {
 
 class GloveProvider with ChangeNotifier {
   // TODO: Implement alternative data source (e.g., Bluetooth, HTTP, WebSocket)
-  // Placeholder untuk koneksi non-Firebase
 
   // --- STATE UTAMA ---
   GloveData _data = GloveData();
@@ -49,7 +48,7 @@ class GloveProvider with ChangeNotifier {
     print("🔧 Mapping Lokal Update: $fingerName -> $newKey");
   }
 
-  // 2. Kirim Keymap Baru ke ESP32 (TODO: Implement non-Firebase solution)
+  // 2. Kirim Keymap Baru ke ESP32
   Future<void> sendKeymapToESP() async {
     final keymapString = _keyMap['index1']! + _keyMap['index2']! + _keyMap['index3']! + _keyMap['index4']!;
     if (keymapString.length != 4) {
@@ -57,19 +56,16 @@ class GloveProvider with ChangeNotifier {
       return;
     }
     // TODO: Implement sending keymap via Bluetooth/HTTP/WebSocket
-    print("⚠️ sendKeymapToESP tidak diimplementasikan (Firebase dihapus)");
+    print("⚠️ sendKeymapToESP belum diimplementasikan");
   }
 
   // TODO: Implement alternative connection method (Bluetooth/HTTP/WebSocket)
   void startConnection() {
-    // Placeholder - Firebase telah dihapus
-    print("⚠️ startConnection tidak diimplementasikan (Firebase dihapus)");
+    print("⚠️ startConnection belum diimplementasikan");
     // TODO: Implement Bluetooth/HTTP/WebSocket connection here
   }
 
   // Tidak ada koneksi BLE lagi.
-
-  // Parsing tidak diperlukan; nilai langsung dari Firebase.
 
   // ==============================================================
   // BAGIAN E: CLEANUP
@@ -91,6 +87,6 @@ class GloveProvider with ChangeNotifier {
   // Konstruktor: TODO - implement alternative connection
   GloveProvider() {
     // startConnection(); // Uncomment when implemented
-    print("⚠️ GloveProvider initialized tanpa Firebase");
+    print("⚠️ GloveProvider initialized - koneksi belum diimplementasikan");
   }
 }

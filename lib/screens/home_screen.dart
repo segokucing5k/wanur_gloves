@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/glove_provider.dart';
 import 'measurement_screen.dart';    // Page Genggaman
 import 'touch_menu_screen.dart';     // Page Menu Kalibrasi
-// BLE dihapus, sekarang pakai Firebase Realtime Database
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -40,7 +39,7 @@ class HomeScreen extends StatelessWidget {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          // INDIKATOR KONEKSI (Firebase listener aktif)
+          // INDIKATOR KONEKSI
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: IconButton(
@@ -49,15 +48,13 @@ class HomeScreen extends StatelessWidget {
                 color: glove.isConnected ? Colors.greenAccent : Colors.cyanAccent,
               ),
               onPressed: () {
-                // Untuk Firebase tidak perlu connect; hanya bisa reset listener
                 if (glove.isConnected) {
                   glove.disconnect();
                 } else {
-                  // Mulai ulang listener jika perlu
-                  glove.startFirebase();
+                  glove.startConnection();
                 }
               },
-              tooltip: glove.isConnected ? "Matikan Listener" : "Mulai Listener",
+              tooltip: glove.isConnected ? "Disconnect" : "Connect",
             ),
           )
         ],
@@ -135,7 +132,7 @@ class HomeScreen extends StatelessWidget {
             //           crossAxisAlignment: CrossAxisAlignment.start,
             //           children: [
             //             Text(
-            //               glove.isConnected ? "Status: Terhubung ke Firebase" : "Status: Tidak ada data",
+            //               glove.isConnected ? "Status: Terhubung" : "Status: Tidak ada data",
             //               style: const TextStyle(
             //                 fontSize: 14, 
             //                 fontWeight: FontWeight.bold,
