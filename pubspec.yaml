@@ -27,6 +27,9 @@ dependencies:
   
   # 5. Izin Android (Bluetooth/Lokasi)
   permission_handler: ^11.3.0
+  
+  # 6. Local Storage (Simpan MAC Address)
+  shared_preferences: ^2.2.2
 
   # 6. Ikon Bawaan
   cupertino_icons: ^1.0.6

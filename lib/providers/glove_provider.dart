@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GloveData {
   // Nilai HX711 (Loadcell)
@@ -20,6 +21,7 @@ class GloveProvider with ChangeNotifier {
   static const String serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
   static const String charUUID =
       "beb5483e-36e1-4688-b7f5-ea07361b26a8"; // Single characteristic untuk TX & RX
+  static const String _savedMacKey = "DC:B4:D9:8D:30:3E";
 
   // BLE Variables
   BluetoothDevice? _connectedDevice;
@@ -65,6 +67,28 @@ class GloveProvider with ChangeNotifier {
     }
   }
 
+  // Save MAC address to local storage
+  Future<void> _saveMacAddress(String macAddress) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_savedMacKey, macAddress);
+      print("💾 Saved MAC address: $macAddress");
+    } catch (e) {
+      print("❌ Error saving MAC address: $e");
+    }
+  }
+
+  // Get saved MAC address from local storage
+  Future<String?> _getSavedMacAddress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_savedMacKey);
+    } catch (e) {
+      print("❌ Error getting saved MAC address: $e");
+      return null;
+    }
+  }
+
   // Auto-connect ke bonded device (kalau ada WanurGlove)
   Future<bool> autoConnectBondedDevice() async {
     try {
@@ -78,40 +102,134 @@ class GloveProvider with ChangeNotifier {
 
       print("📱 Found ${bondedDevices.length} bonded device(s)");
 
-      // Cari device yang sudah terhubung dengan service UUID kita
+      // Debug: Print all bonded devices
       for (var device in bondedDevices) {
-        print(
-            "🔍 Checking bonded device: ${device.platformName} (${device.remoteId})");
+        print("  - ${device.platformName} (${device.remoteId})");
+      }
 
-        // Connect dulu untuk cek services
+      // SUPER FAST: Try saved MAC address first (skip scan!)
+      final savedMac = await _getSavedMacAddress();
+      if (savedMac != null) {
+        print("⚡ Found saved MAC: $savedMac - Trying instant connect...");
+
+        // Find bonded device with this MAC
         try {
-          await device.connect(timeout: const Duration(seconds: 10));
-          await Future.delayed(const Duration(milliseconds: 500));
+          final targetDevice = bondedDevices.firstWhere(
+            (d) =>
+                d.remoteId.toString().toUpperCase() == savedMac.toUpperCase(),
+          );
 
-          final services = await device.discoverServices();
-          final hasWanurService = services.any((s) => s.uuid
-              .toString()
-              .toLowerCase()
-              .contains(serviceUUID.toLowerCase()));
-
-          if (hasWanurService) {
-            print("✅ Found WanurGlove bonded device: ${device.platformName}");
-            // Langsung connect menggunakan method yang sudah ada
-            await connectToDevice(device);
+          // Try direct connect (no scan needed!)
+          try {
+            print(
+                "🚀 Instant connect to ${targetDevice.platformName} ($savedMac)...");
+            await connectToDevice(targetDevice);
+            print("✅ Instant connect successful!");
             return true;
-          } else {
-            print("⚠️ Device tidak punya WanurGlove service, disconnect...");
-            await device.disconnect();
+          } catch (e) {
+            print("⚠️ Instant connect failed: $e");
           }
         } catch (e) {
-          print("⚠️ Failed to check device ${device.platformName}: $e");
-          try {
-            await device.disconnect();
-          } catch (_) {}
+          print("⚠️ Saved MAC $savedMac not in bonded devices");
         }
       }
 
-      print("⚠️ No WanurGlove device found in bonded devices");
+      // STRATEGY 2: Find device by name "MediGrip-Controller" (works with BleKeyboard HID mode!)
+      print("🔍 Looking for 'MediGrip-Controller' in bonded devices...");
+      try {
+        final mediGripDevice = bondedDevices.firstWhere(
+          (d) => d.platformName.toLowerCase().contains("medigrip"),
+        );
+
+        print(
+            "✅ Found MediGrip device: ${mediGripDevice.platformName} (${mediGripDevice.remoteId})");
+        print("🔌 Connecting directly (no scan needed for HID devices)...");
+
+        try {
+          await connectToDevice(mediGripDevice);
+          print("✅ Successfully connected to MediGrip!");
+
+          // Save MAC for next time
+          await _saveMacAddress(mediGripDevice.remoteId.toString());
+          return true;
+        } catch (e) {
+          print("⚠️ Failed to connect to MediGrip: $e");
+        }
+      } catch (e) {
+        print("⚠️ MediGrip-Controller not found in bonded devices");
+      }
+
+      // FALLBACK: Quick scan to get advertisement data
+      print("🔍 Quick scan to filter WanurGlove devices...");
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 3));
+
+      List<ScanResult> wanurDevices = [];
+
+      // Listen to scan results and filter
+      final subscription = FlutterBluePlus.scanResults.listen((results) {
+        print("📡 Scan found ${results.length} devices");
+        for (var result in results) {
+          // Debug: Print all scanned devices
+          final isBonded =
+              bondedDevices.any((d) => d.remoteId == result.device.remoteId);
+          final serviceUUIDs = result.advertisementData.serviceUuids
+              .map((u) => u.toString())
+              .join(", ");
+          print(
+              "  - ${result.device.platformName.isEmpty ? 'Unknown' : result.device.platformName} (${result.device.remoteId}) - Bonded: $isBonded - Services: [$serviceUUIDs]");
+
+          final hasWanurService = result.advertisementData.serviceUuids.any(
+              (uuid) => uuid
+                  .toString()
+                  .toLowerCase()
+                  .contains(serviceUUID.toLowerCase()));
+
+          if (isBonded && hasWanurService) {
+            // Avoid duplicates
+            if (!wanurDevices
+                .any((d) => d.device.remoteId == result.device.remoteId)) {
+              wanurDevices.add(result);
+              print(
+                  "✅ Found bonded WanurGlove: ${result.device.platformName} (${result.device.remoteId})");
+            }
+          } else if (isBonded && !hasWanurService) {
+            print("  ⚠️ Bonded but no WanurGlove service");
+          }
+        }
+      });
+
+      // Wait for scan to complete
+      await Future.delayed(const Duration(seconds: 3));
+      await subscription.cancel();
+      await FlutterBluePlus.stopScan();
+
+      if (wanurDevices.isEmpty) {
+        print("⚠️ No bonded WanurGlove device found in scan");
+        return false;
+      }
+
+      print(
+          "🎯 Attempting to connect to ${wanurDevices.length} WanurGlove device(s)...");
+
+      // Try to connect to the first WanurGlove device found
+      for (var result in wanurDevices) {
+        try {
+          print("🔌 Connecting to ${result.device.platformName}...");
+          await connectToDevice(result.device);
+          print("✅ Successfully connected!");
+
+          // Save this MAC address for next time
+          await _saveMacAddress(result.device.remoteId.toString());
+
+          return true;
+        } catch (e) {
+          print("⚠️ Failed to connect to ${result.device.platformName}: $e");
+          // Try next device if available
+          continue;
+        }
+      }
+
+      print("⚠️ Failed to connect to all WanurGlove devices");
       return false;
     } catch (e) {
       print("❌ Error in autoConnectBondedDevice: $e");
