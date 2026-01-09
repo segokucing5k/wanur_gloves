@@ -40,7 +40,7 @@ class _MeasurementScreenState extends State<MeasurementScreen> {
           },
           tooltip: 'Back',
         ),
-        title: const Text("MediGrip", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white)),
+        title: const Text("WanurGlove", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white)),
         actions: [
           IconButton(
             icon: const Icon(Icons.menu, color: Colors.cyanAccent),
@@ -88,7 +88,7 @@ class _MeasurementScreenState extends State<MeasurementScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Real-time Load Cell Measurement", // Teks diupdate biar keren
+                        "Real-time Force Measurement", // Teks diupdate biar keren
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey.shade500, fontSize: 11)
                       ),

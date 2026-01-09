@@ -42,19 +42,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Stack(
         alignment: Alignment.center,
         children: [
-          Positioned(
-            top: 16,
-            left: 16,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white70),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-              },
-              tooltip: 'Back',
-            ),
-          ),
           // --- LAYER 1: BACKGROUND SHAPE (HIASAN) ---
           // Ini yang kemarin sempat hilang, Mas balikin lagi posisinya di kiri bawah
           Positioned(

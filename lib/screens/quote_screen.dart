@@ -27,19 +27,6 @@ class _QuoteScreenState extends State<QuoteScreen> {
       backgroundColor: const Color(0xFFD6E4FF), 
       body: Stack(
         children: [
-          Positioned(
-            top: 16,
-            left: 16,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black54),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-              },
-              tooltip: 'Back',
-            ),
-          ),
           // --- LAYER 1: BACKGROUND SHAPE ---
           Positioned(
             top: 0, 

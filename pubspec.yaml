@@ -12,8 +12,9 @@ dependencies:
     sdk: flutter
 
   # --- DEPENDENCIES UTAMA ---
-  # 1. Bluetooth (Koneksi ESP32)
-  flutter_blue_plus: ^1.32.12
+  # 1. Firebase Core & Realtime Database
+  firebase_core: ^2.24.2
+  firebase_database: ^10.5.5
   
   # 2. State Management (Otak Aplikasi)
   provider: ^6.1.5

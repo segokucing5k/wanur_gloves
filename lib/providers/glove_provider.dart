@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class GloveData {
   // Nilai HX711 (Loadcell)
@@ -17,28 +15,17 @@ class GloveData {
 }
 
 class GloveProvider with ChangeNotifier {
-  // ==============================================================
-  // 1. UUID & STATE
-  // ==============================================================
-  
-  // UUID ESP32 (Harus sama persis dengan di gloves.ino)
-  final Guid SERVICE_UUID = Guid("12345678-1234-1234-1234-1234567890ab");
-  final Guid CHAR_NOTIFY_UUID = Guid("abcd1234-1234-1234-1234-1234567890ab"); // Kirim sensor -> Flutter (NOTIFY)
-  final Guid CHAR_WRITE_UUID = Guid("eebb5566-1234-1234-1234-1234567890ab"); // Kirim keymap -> ESP32 (WRITE)
+  // Firebase Realtime Database refs
+  final FirebaseDatabase _db = FirebaseDatabase.instance;
+  DatabaseReference? _forceRef;
+  DatabaseReference? _keymapRef;
+  StreamSubscription<DatabaseEvent>? _forceSub;
+  StreamSubscription<DatabaseEvent>? _keymapSub;
 
   // --- STATE UTAMA ---
   GloveData _data = GloveData();
-  bool _isConnected = false;
-  bool _isScanning = false;
-  
-  // --- STATE KONEKSI INTERAL ---
-  BluetoothDevice? _device;
-  StreamSubscription? _dataStream;
-  StreamSubscription? _connectionStream;
-  
-  // --- CHARACTERISTICS ---
-  BluetoothCharacteristic? _notifyChar; // Untuk menerima data (NOTIFY)
-  BluetoothCharacteristic? _writeChar; // Untuk mengirim data (WRITE)
+  bool _isConnected = false; // menandakan listener aktif
+  bool _isScanning = false; // tidak digunakan lagi, tetap ada untuk UI
 
   // --- STATE KONFIGURASI TOMBOL (MAPPING) ---
   // Keymap awal (sesuai ESP32: f, g, h, j)
@@ -67,179 +54,73 @@ class GloveProvider with ChangeNotifier {
     print("🔧 Mapping Lokal Update: $fingerName -> $newKey");
   }
 
-  // 2. Kirim Keymap Baru ke ESP32 (FUNGSI PENTING BARU)
+  // 2. Kirim Keymap Baru ke Firebase agar dibaca ESP32
   Future<void> sendKeymapToESP() async {
-    if (_writeChar == null || !_isConnected) {
-      print("❌ Gagal Kirim: Characteristic WRITE atau koneksi tidak siap.");
-      return;
-    }
-
-    // Ambil 4 karakter dari keymap dalam urutan ESP32 (f, g, h, j)
-    String keymapString = _keyMap['index1']! + _keyMap['index2']! + _keyMap['index3']! + _keyMap['index4']!;
-
+    final keymapString = _keyMap['index1']! + _keyMap['index2']! + _keyMap['index3']! + _keyMap['index4']!;
     if (keymapString.length != 4) {
       print("❌ Gagal Kirim: Keymap tidak 4 karakter.");
       return;
     }
-
     try {
-      // Konversi String menjadi Uint8List (Byte Array)
-      List<int> bytes = keymapString.codeUnits;
-      
-      await _writeChar!.write(
-        Uint8List.fromList(bytes),
-        withoutResponse: true,
-      );
-      print("✅ Keymap dikirim: $keymapString");
+      _keymapRef ??= _db.ref('/config/keymap');
+      await _keymapRef!.set(keymapString);
+      print("✅ Keymap ditulis ke Firebase: $keymapString");
     } catch (e) {
-      print("❌ Error saat mengirim keymap: $e");
+      print("❌ Error saat menulis keymap: $e");
     }
   }
 
-  // ==============================================================
-  // BAGIAN B: FUNGSI SCAN DAN KONEK
-  // (Logika SCAN dan Connect tetap sama, hanya ganti UUID)
-  // ==============================================================
-  Future<void> scanAndConnect() async {
-    print("🔍 Memulai Scan...");
-    // ... (Logika scan & error handling) ...
-    // (Tambahkan permission_handler jika belum)
+  // Mulai listener Firebase (dipanggil otomatis saat provider dibuat)
+  void startFirebase() {
+    _forceRef = _db.ref('/status/force');
+    _keymapRef = _db.ref('/config/keymap');
 
-    try {
-      final adapterState = await FlutterBluePlus.adapterState.first;
-      if (adapterState != BluetoothAdapterState.on) {
-        print("❌ Error: Bluetooth HP Mati!");
-        return;
+    _forceSub = _forceRef!.onValue.listen((event) {
+      final val = event.snapshot.value;
+      if (val is int) {
+        _data = GloveData(hxValue: val, lastKey: _data.lastKey);
+        _isConnected = true;
+        notifyListeners();
+      } else if (val is double) {
+        _data = GloveData(hxValue: val.toInt(), lastKey: _data.lastKey);
+        _isConnected = true;
+        notifyListeners();
       }
-
-      _isScanning = true;
+    }, onError: (e) {
+      _isConnected = false;
       notifyListeners();
+      print('❌ Firebase force listener error: $e');
+    });
 
-      await FlutterBluePlus.startScan(
-        timeout: const Duration(seconds: 10),
-        androidUsesFineLocation: true,
-        withNames: ["ESP32-Gloves"] // Filter lebih cepat berdasarkan nama GATT
-      );
-
-      // Cari hasil scan dan filter
-      var results = await FlutterBluePlus.scanResults.first;
-      BluetoothDevice? foundDevice;
-
-      for (ScanResult r in results) {
-          if (r.device.platformName == "ESP32-Gloves") {
-            foundDevice = r.device;
-            break;
-          }
+    _keymapSub = _keymapRef!.onValue.listen((event) {
+      final val = event.snapshot.value;
+      if (val is String && val.length == 4) {
+        _keyMap = {
+          'index1': val[0],
+          'index2': val[1],
+          'index3': val[2],
+          'index4': val[3],
+        };
+        notifyListeners();
+        print('🔄 Keymap dari Firebase: $val');
       }
-
-      await FlutterBluePlus.stopScan();
-      _isScanning = false;
-      notifyListeners();
-
-      if (foundDevice != null) {
-        print("✅ Ketemu Device: ${foundDevice.platformName}");
-        _connect(foundDevice);
-      } else {
-        print("⏱️ Device 'ESP32-Gloves' tidak ditemukan.");
-      }
-      
-    } catch (e) {
-      print("❌ Error saat scan: $e");
-      _isScanning = false;
-      notifyListeners();
-    }
+    }, onError: (e) {
+      print('❌ Firebase keymap listener error: $e');
+    });
   }
 
-  // ==============================================================
-  // BAGIAN C: PROSES KONEKSI INTERNAL
-  // ==============================================================
-  Future<void> _connect(BluetoothDevice device) async {
-    try {
-      await device.connect(timeout: const Duration(seconds: 15), autoConnect: false);
-      
-      _device = device;
-      _isConnected = true;
-      notifyListeners();
+  // Tidak ada koneksi BLE lagi.
 
-      _connectionStream = device.connectionState.listen((state) {
-        if (state == BluetoothConnectionState.disconnected) {
-          print("⚠️ Koneksi terputus!");
-          disconnect();
-        }
-      });
-
-      List<BluetoothService> services = await device.discoverServices();
-      
-      for (var service in services) {
-        if (service.uuid == SERVICE_UUID) {
-          for (var characteristic in service.characteristics) {
-            
-            if (characteristic.uuid == CHAR_NOTIFY_UUID) {
-              _notifyChar = characteristic;
-              await characteristic.setNotifyValue(true);
-              _dataStream = characteristic.lastValueStream.listen(_parseData);
-              print("🎉 CHAR_NOTIFY SIAP!");
-            
-            } else if (characteristic.uuid == CHAR_WRITE_UUID) {
-              _writeChar = characteristic;
-              print("🎉 CHAR_WRITE SIAP!");
-            }
-          }
-        }
-      }
-      
-      if (_notifyChar == null || _writeChar == null) {
-        print("❌ Service/Characteristic (Notify atau Write) Salah!");
-        disconnect();
-      }
-      
-    } catch (e) {
-      print("❌ Gagal Konek: $e");
-      disconnect();
-    }
-  }
-
-  // ==============================================================
-  // BAGIAN D: PARSING DATA (DARI JSON STRING)
-  // ==============================================================
-  void _parseData(List<int> raw) {
-    if (raw.isEmpty) return;
-
-    try {
-      // 1. Konversi Byte Array menjadi String JSON
-      String jsonString = utf8.decode(raw); 
-      
-      // 2. Parsing JSON
-      final Map<String, dynamic> decodedJson = jsonDecode(jsonString);
-
-      // 3. Update GloveData
-      _data = GloveData(
-        // hx dikirim sebagai long, di Dart dibaca sebagai int
-        hxValue: decodedJson['hx'] ?? 0, 
-        // key dikirim sebagai string
-        lastKey: decodedJson['key'] ?? 'N/A',
-      );
-
-      notifyListeners();
-      
-    } catch (e) {
-      print("❌ Parsing JSON Error: $e | Raw Data: ${raw.toString()}");
-    }
-  }
+  // Parsing tidak diperlukan; nilai langsung dari Firebase.
 
   // ==============================================================
   // BAGIAN E: CLEANUP
   // ==============================================================
   void disconnect() async {
-    await _dataStream?.cancel();
-    await _connectionStream?.cancel();
-    await _device?.disconnect();
-    
-    _dataStream = null;
-    _connectionStream = null;
-    _device = null;
-    _notifyChar = null;
-    _writeChar = null;
+    await _forceSub?.cancel();
+    await _keymapSub?.cancel();
+    _forceSub = null;
+    _keymapSub = null;
     _isConnected = false;
     _data = GloveData(); // Reset data
     
@@ -251,5 +132,10 @@ class GloveProvider with ChangeNotifier {
   void dispose() {
     disconnect();
     super.dispose();
+  }
+
+  // Konstruktor: otomatis start Firebase listeners
+  GloveProvider() {
+    startFirebase();
   }
 }

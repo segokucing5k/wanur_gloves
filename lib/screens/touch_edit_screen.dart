@@ -27,7 +27,7 @@ class TouchEditScreen extends StatelessWidget {
             top: 60, left: 0, right: 0,
             child: Center(
               child: Text(
-                "MODE EDIT: TAP TOMBOL & TES SENSOR", 
+                "EDIT TOMBOL", 
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)
               ),
             ),
@@ -69,13 +69,6 @@ class TouchEditScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                
-                // Tombol Kembali
-                TextButton.icon(
-                  onPressed: () => Navigator.pop(context), 
-                  icon: const Icon(Icons.arrow_back, color: Colors.white54),
-                  label: const Text("SELESAI & KEMBALI", style: TextStyle(color: Colors.white54)),
-                )
               ],
             ),
           )

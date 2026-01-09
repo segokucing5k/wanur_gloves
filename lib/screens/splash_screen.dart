@@ -29,19 +29,19 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned(
-            top: 16,
-            left: 16,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black54),
-              onPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-              },
-              tooltip: 'Back',
-            ),
-          ),
+          // Positioned(
+          //   top: 16,
+          //   left: 16,
+          //   child: IconButton(
+          //     icon: const Icon(Icons.arrow_back, color: Colors.black54),
+          //     onPressed: () {
+          //       if (Navigator.of(context).canPop()) {
+          //         Navigator.of(context).pop();
+          //       }
+          //     },
+          //     tooltip: 'Back',
+          //   ),
+          // ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   height: 120,
                   width: 120,
                   child: Image(
-                    image: AssetImage('assets/logo_app.png'),
+                    image: AssetImage('assets/logo_aja.png'),
                   ),
                 ),
                 SizedBox(height: 20),

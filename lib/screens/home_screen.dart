@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/glove_provider.dart';
 import 'measurement_screen.dart';    // Page Genggaman
 import 'touch_menu_screen.dart';     // Page Menu Kalibrasi
+// BLE dihapus, sekarang pakai Firebase Realtime Database
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,26 +36,28 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
-          "MediGrip",
+          "WanurGlove",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          // INDIKATOR & TOMBOL CONNECT
+          // INDIKATOR KONEKSI (Firebase listener aktif)
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: IconButton(
               icon: Icon(
-                glove.isConnected ? Icons.bluetooth_connected : Icons.bluetooth_searching,
+                glove.isConnected ? Icons.cloud_done : Icons.cloud,
                 color: glove.isConnected ? Colors.greenAccent : Colors.cyanAccent,
               ),
               onPressed: () {
+                // Untuk Firebase tidak perlu connect; hanya bisa reset listener
                 if (glove.isConnected) {
                   glove.disconnect();
                 } else {
-                  glove.scanAndConnect();
+                  // Mulai ulang listener jika perlu
+                  glove.startFirebase();
                 }
               },
-              tooltip: glove.isConnected ? "Disconnect Glove" : "Scan & Connect",
+              tooltip: glove.isConnected ? "Matikan Listener" : "Mulai Listener",
             ),
           )
         ],
@@ -97,7 +100,7 @@ class HomeScreen extends StatelessWidget {
             // --- KARTU 2: GAME KALIBRASI (TOUCH SENSOR) ---
             ActionCard(
               title: "Kalibrasi Jari",
-              subtitle: "Cek respons sensor sentuh (Touch)",
+              subtitle: "Cek respons sensor",
               icon: Icons.touch_app,
               themeColor: const Color(0xFF4A5240), // Olive gelap
               buttonText: "Mulai Kalibrasi",
@@ -112,28 +115,92 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24),
             
             // STATUS INFO
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: const Color(0xFF121A2D),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.cyanAccent.withOpacity(0.3))
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: Colors.cyanAccent),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      glove.isConnected 
-                        ? "Status: Perangkat Terhubung. Siap digunakan."
-                        : "Status: Belum Terhubung. Tekan ikon Bluetooth di atas.",
-                      style: const TextStyle(fontSize: 12, color: Colors.white70),
-                    ),
-                  )
-                ],
-              ),
-            )
+            // Container(
+            //   padding: const EdgeInsets.all(15),
+            //   decoration: BoxDecoration(
+            //     color: const Color(0xFF121A2D),
+            //     borderRadius: BorderRadius.circular(12),
+            //     border: Border.all(color: Colors.cyanAccent.withOpacity(0.3))
+            //   ),
+            //   child: Row(
+            //     children: [
+            //       Icon(
+            //         glove.isConnected ? Icons.cloud_done : Icons.info_outline,
+            //         color: glove.isConnected ? Colors.greenAccent : Colors.cyanAccent
+            //       ),
+            //       const SizedBox(width: 10),
+            //       Expanded(
+            //         // HAPUS FutureBuilder yang rumit. Gunakan data dari Provider saja.
+            //         child: Column(
+            //           crossAxisAlignment: CrossAxisAlignment.start,
+            //           children: [
+            //             Text(
+            //               glove.isConnected ? "Status: Terhubung ke Firebase" : "Status: Tidak ada data",
+            //               style: const TextStyle(
+            //                 fontSize: 14, 
+            //                 fontWeight: FontWeight.bold,
+            //                 color: Colors.white
+            //               ),
+            //             ),
+            //             Text(
+            //               glove.isConnected 
+            //                 ? "Realtime Database aktif."
+            //                 : "Tekan ikon awan untuk mulai listener.",
+            //               style: const TextStyle(fontSize: 12, color: Colors.white70),
+            //             ),
+            //           ],
+            //         ),
+            //       )
+            //     ],
+            //   ),
+            // ),
+
+            const SizedBox(height: 24),
+            // === AKSI KEYMAP ===
+            // Container(
+            //   padding: const EdgeInsets.all(15),
+            //   decoration: BoxDecoration(
+            //     color: const Color(0xFF121A2D),
+            //     borderRadius: BorderRadius.circular(12),
+            //     border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
+            //   ),
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       const Text(
+            //         "Keymap",
+            //         style: TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+            //       ),
+            //       const SizedBox(height: 8),
+            //       Text(
+            //         "Saat ini: ${glove.keyMap['index1']}${glove.keyMap['index2']}${glove.keyMap['index3']}${glove.keyMap['index4']}",
+            //         style: const TextStyle(color: Colors.white70),
+            //       ),
+            //       const SizedBox(height: 8),
+            //       Row(
+            //         children: [
+            //           ElevatedButton(
+            //             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00BFA5)),
+            //             onPressed: () async {
+            //               await glove.sendKeymapToESP();
+            //             },
+            //             child: const Text("Kirim ke ESP", style: TextStyle(color: Colors.white)),
+            //           ),
+            //           const SizedBox(width: 8),
+            //           OutlinedButton(
+            //             onPressed: () {
+            //               // contoh toggle cepat
+            //               final cur = glove.keyMap;
+            //               context.read<GloveProvider>().updateLocalKey('index1', cur['index1'] == 'f' ? 'a' : 'f');
+            //             },
+            //             child: const Text("Ubah Cepat"),
+            //           ),
+            //         ],
+            //       ),
+            //     ],
+            //   ),
+            // )
+
           ],
         ),
       ),
