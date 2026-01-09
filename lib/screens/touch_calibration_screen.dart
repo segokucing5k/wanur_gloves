@@ -25,7 +25,7 @@ class _TouchCalibrationScreenState extends State<TouchCalibrationScreen> {
   @override
   Widget build(BuildContext context) {
     final glove = context.watch<GloveProvider>();
-    
+
     // LOGIKA OTOMATIS
     if (!_isAllDone) {
       String targetFinger = _sequence[_currentIndex];
@@ -33,15 +33,16 @@ class _TouchCalibrationScreenState extends State<TouchCalibrationScreen> {
       final targetMapKey = _mapFingerKey(targetFinger);
       final targetAssignedKey = glove.keyMap[targetMapKey];
       final isPressed = (targetAssignedKey != null) &&
-          (glove.data.lastKey.toString().toLowerCase() == targetAssignedKey.toLowerCase());
+          (glove.data.lastKey.toString().toLowerCase() ==
+              targetAssignedKey.toLowerCase());
       if (isPressed) {
         Future.delayed(const Duration(milliseconds: 300), () {
           if (mounted && !_isAllDone) {
             setState(() {
               if (_currentIndex < _sequence.length - 1) {
-                _currentIndex++; 
+                _currentIndex++;
               } else {
-                _isAllDone = true; 
+                _isAllDone = true;
               }
             });
           }
@@ -49,11 +50,11 @@ class _TouchCalibrationScreenState extends State<TouchCalibrationScreen> {
       }
     }
 
-    String currentFingerKey = _sequence[_currentIndex]; 
+    String currentFingerKey = _sequence[_currentIndex];
     // Ambil huruf yang dipetakan dari provider menggunakan key 'index1'..'index4'
     final currentMapKey = _mapFingerKey(currentFingerKey);
-    String assignedChar = glove.keyMap[currentMapKey] ?? "?"; 
-    String labelFinger = currentFingerKey.toUpperCase(); 
+    String assignedChar = glove.keyMap[currentMapKey] ?? "?";
+    String labelFinger = currentFingerKey.toUpperCase();
 
     return CalibrationBaseLayout(
       child: Stack(
@@ -97,16 +98,23 @@ class _TouchCalibrationScreenState extends State<TouchCalibrationScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 50, height: 50,
+                    width: 50,
+                    height: 50,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.greenAccent, blurRadius: 20)]
-                    ),
-                    child: Text(assignedChar, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(color: Colors.greenAccent, blurRadius: 20)
+                        ]),
+                    child: Text(assignedChar,
+                        style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
                   ),
-                  const Icon(Icons.arrow_drop_down, color: Colors.white, size: 40)
+                  const Icon(Icons.arrow_drop_down,
+                      color: Colors.white, size: 40)
                 ],
               ),
             ),
@@ -118,26 +126,27 @@ class _TouchCalibrationScreenState extends State<TouchCalibrationScreen> {
   // --- WIDGET BUILDERS ---
 
   Widget _buildHeader(String labelFinger, String assignedChar) {
-    // Teks yang mau ditampilkan
-    String text = _isAllDone 
-        ? "KALIBRASI SUKSES!" 
-        : "GERAKKAN JARI $labelFinger ($assignedChar)";
+    // Text to display
+    String text = _isAllDone
+        ? "CALIBRATION SUCCESS!"
+        : "MOVE $labelFinger FINGER ($assignedChar)";
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
-        // Kasih background gelap biar kalaupun kena tangan, teksnya tetep kebaca
-        color: Colors.black87, 
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.cyan.withOpacity(0.5), width: 1.5),
-        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 10)]
-      ),
+          // Kasih background gelap biar kalaupun kena tangan, teksnya tetep kebaca
+          color: Colors.black87,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.cyan.withOpacity(0.5), width: 1.5),
+          boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 10)]),
       child: Text(
         text,
         textAlign: TextAlign.center,
         style: const TextStyle(
-          color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2
-        ),
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2),
       ),
     );
   }
@@ -145,22 +154,26 @@ class _TouchCalibrationScreenState extends State<TouchCalibrationScreen> {
   Widget _buildBottomControls() {
     if (_isAllDone) {
       return SizedBox(
-        width: 200, height: 55,
+        width: 200,
+        height: 55,
         child: ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00BFA5)),
-          onPressed: () => Navigator.pop(context), 
-          child: const Text("DONE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00BFA5)),
+          onPressed: () => Navigator.pop(context),
+          child: const Text("DONE",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18)),
         ),
       );
     } else {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.black45,
-          borderRadius: BorderRadius.circular(20)
-        ),
+            color: Colors.black45, borderRadius: BorderRadius.circular(20)),
         child: const Text(
-          "Menunggu sensor ditekan...", 
+          "Waiting for sensor press...",
           style: TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
         ),
       );
