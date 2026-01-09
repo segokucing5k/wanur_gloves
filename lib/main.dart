@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 // IMPORT PROVIDER (OTAK APLIKASI)
 import 'providers/glove_provider.dart';
 
 // IMPORT SCREEN AWAL (GERBONG PERTAMA)
 import 'screens/splash_screen.dart';
-import 'firebase_options.dart';
 
 void main() {
   // Pastikan binding initialized sebelum menjalankan app (Best Practice)
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Firebase terlebih dahulu
-  // Note: untuk Web/Android/iOS menggunakan firebase_options.dart
-  // yang sudah di-generate via FlutterFire CLI
-  // Jangan panggil runApp sebelum init selesai.
-  Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  ).then((_) {
-    runApp(
+  runApp(
     // BUNGKUS APLIKASI DENGAN PROVIDER
     // Ini supaya 'GloveProvider' bisa diakses dari Splash, Home, Game, dll.
     MultiProvider(
@@ -29,8 +20,7 @@ void main() {
       ],
       child: const MyApp(),
     ),
-    );
-  });
+  );
 }
 
 class MyApp extends StatelessWidget {

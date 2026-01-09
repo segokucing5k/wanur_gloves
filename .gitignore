@@ -45,3 +45,23 @@ app.*.map.json
 /android/app/release
 
 .vscode/templates
+
+# Sensitive Configuration Files (Local development only)
+android/local.properties
+
+# Database files (if any local database)
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.jks
+keystore.properties
