@@ -363,26 +363,37 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
-          // INDIKATOR KONEKSI BLE
+          // BLUETOOTH AUTO-CONNECT BUTTON
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: IconButton(
-              icon: Icon(
-                glove.isConnected ? Icons.bluetooth_connected : Icons.bluetooth,
-                color:
-                    glove.isConnected ? Colors.greenAccent : Colors.cyanAccent,
-              ),
-              onPressed: () {
-                if (glove.isConnected) {
-                  glove.disconnect();
-                } else {
-                  // Show scan dialog
-                  _showScanDialog(context);
-                }
-              },
-              tooltip:
-                  glove.isConnected ? "Disconnect BLE" : "Scan BLE Devices",
-            ),
+            child: _isRetrying
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.cyanAccent,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: Icon(
+                      glove.isConnected
+                          ? Icons.bluetooth_connected
+                          : Icons.bluetooth,
+                      color: glove.isConnected
+                          ? Colors.greenAccent
+                          : Colors.cyanAccent,
+                    ),
+                    onPressed: () {
+                      final glove = context.read<GloveProvider>();
+                      _tryAutoConnect(glove);
+                    },
+                    tooltip:
+                        glove.isConnected ? "Reconnect" : "Connect to MediGrip",
+                  ),
           )
         ],
       ),
@@ -401,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.cyanAccent),
             ),
             Text(
-              "Ready to train today?",
+              "Ready to excercise today?",
               style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
             ),
 
@@ -484,26 +495,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  // Retry button (only show when not connected)
-                  if (!glove.isConnected)
-                    _isRetrying
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.cyanAccent,
-                            ),
-                          )
-                        : IconButton(
-                            icon: const Icon(Icons.refresh,
-                                color: Colors.cyanAccent),
-                            onPressed: () {
-                              final glove = context.read<GloveProvider>();
-                              _tryAutoConnect(glove);
-                            },
-                            tooltip: 'Retry Auto-Connect',
-                          ),
                 ],
               ),
             ),

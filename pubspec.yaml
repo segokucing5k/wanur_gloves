@@ -30,6 +30,9 @@ dependencies:
   
   # 6. Local Storage (Simpan MAC Address)
   shared_preferences: ^2.2.2
+  
+  # 7. WebView (In-app Browser)
+  webview_flutter: ^4.4.2
 
   # 6. Ikon Bawaan
   cupertino_icons: ^1.0.6
