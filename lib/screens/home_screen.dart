@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/glove_provider.dart';
 import 'measurement_screen.dart'; // Page Genggaman
 import 'touch_menu_screen.dart'; // Page Menu Kalibrasi
+import 'game_webview_screen.dart'; // Page Game
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -418,42 +419,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 24),
 
-            // --- CARD 1: GRIP MEASUREMENT (LOADCELL) ---
-            ActionCard(
-              title: "Grip Measurement",
-              subtitle: "Measure hand grip strength",
-              icon: Icons.back_hand,
-              themeColor: const Color(0xFF00BFA5),
-              buttonText: "Start Measure",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MeasurementScreen()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            // --- CARD 2: FINGER CALIBRATION (TOUCH SENSOR) ---
-            ActionCard(
-              title: "Finger Calibration",
-              subtitle: "Check sensor response",
-              icon: Icons.touch_app,
-              themeColor: const Color(0xFF4A5240),
-              buttonText: "Start Calibration",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const TouchMenuScreen()),
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
-
             // STATUS INFO - BLE Connection
             Container(
               padding: const EdgeInsets.all(15),
@@ -478,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           glove.isConnected
-                              ? "✅ Connected to ${glove.connectedDevice?.platformName ?? 'MediGrip Device'}"
+                              ? "Connected to WanurGlove"
                               : "⚠️ No Device Connected",
                           style: const TextStyle(
                               fontSize: 14,
@@ -487,8 +452,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Text(
                           glove.isConnected
-                              ? "Bluetooth Low Energy active."
-                              : "Auto-connecting to paired device...",
+                              ? "Device connected!"
+                              : "Connecting to device...",
                           style: const TextStyle(
                               fontSize: 12, color: Colors.white70),
                         ),
@@ -497,6 +462,60 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // --- CARD 1: MAGIC TILES GAME ---
+            ActionCard(
+              title: "Training Game",
+              subtitle: "Play rhythm game for finger training",
+              icon: Icons.piano,
+              themeColor: const Color(0xFF6A1B9A),
+              buttonText: "Start Game",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const GameWebViewScreen()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // --- CARD 2: FINGER CALIBRATION (TOUCH SENSOR) ---
+            ActionCard(
+              title: "Finger Calibration",
+              subtitle: "Check sensor response",
+              icon: Icons.touch_app,
+              themeColor: const Color(0xFF4A5240),
+              buttonText: "Start Calibration",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const TouchMenuScreen()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // --- CARD 3: GRIP MEASUREMENT (LOADCELL) ---
+            ActionCard(
+              title: "Grip Measurement",
+              subtitle: "Measure hand grip strength",
+              icon: Icons.back_hand,
+              themeColor: const Color(0xFF00BFA5),
+              buttonText: "Start Measure",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MeasurementScreen()),
+                );
+              },
             ),
 
             const SizedBox(height: 24),
